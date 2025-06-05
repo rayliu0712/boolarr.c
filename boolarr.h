@@ -1,20 +1,30 @@
 #include <stdbool.h>
-typedef unsigned char byte;
+#include <stddef.h>
 
 #define BOOLSTR(b) ((b) ? "true" : "false")
+#define BITSTR(b) ('0' + (b))
 
-byte* barr_new(int len, bool b);
+typedef unsigned char u8;
 
-bool barr_get(const byte* barr, int i);
+typedef struct {
+    u8* _arr;
+    size_t len;
+} BoolArr;
 
-void barr_set(byte* barr, int i, bool b);
+BoolArr* barr_new(size_t len, bool b);
 
-void barr_fill(byte* barr, int start, int end, bool b);
+bool barr_get(const BoolArr* barr, size_t i);
 
-void barr_str(const byte* barr, int len, char* dest);
+void barr_set(BoolArr* barr, size_t i, bool b);
 
-void barr_print(const byte* barr, int len);
+void barr_free(BoolArr* barr);
 
-bool barr_all(const byte* barr, int len);
+void barr_fill(BoolArr* barr, size_t start, size_t end, bool b);
 
-bool barr_any(const byte* barr, int len);
+void barr_str(const BoolArr* barr, char* dest);
+
+void barr_print(const BoolArr* barr);
+
+bool barr_all(const BoolArr* barr);
+
+bool barr_any(const BoolArr* barr);

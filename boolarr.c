@@ -3,66 +3,88 @@
 #include <stdlib.h>
 #include <string.h>
 
-byte* barr_new(int len, bool b) {
-    int n = (len + 7) / 8;  // ceil
-    byte* barr = malloc(n);
-    memset(barr, b, n);
+#define ROWS(i) (((i) + 7) / 8)
+
+static void setbit(u8* row, size_t start, size_t end, bool b) {
+    // [start, end)
+
+    start %= 8;
+    end %= 8;
+    size_t len = end - start;
+    u8 mask = ((1U << len) - 1) << start;
+
+    *row = (*row & ~mask) | (b ? mask : 0);
+}
+
+BoolArr* barr_new(size_t len, bool b) {
+    BoolArr* barr = malloc(sizeof(BoolArr));
+
+    size_t rows = ROWS(len);  // ceil
+    barr->_arr = malloc(rows);
+    memset(barr->_arr, b, rows);
+
+    barr->len = len;
+
     return barr;
 }
 
-bool barr_get(const byte* barr, int i) {
-    int row = i / 8;
-    int col = i % 8;
-    return (barr[row] >> col) & 1;
+bool barr_get(const BoolArr* barr, size_t i) {
+    size_t row = i / 8;
+    size_t col = i % 8;
+    return (barr->_arr[row] >> col) & 1;
 }
 
-void barr_set(byte* barr, int i, bool b) {
-    int row = i / 8;
-    int col = i % 8;
-    byte mask = 1 << col;
-    barr[row] = (barr[row] & ~mask) | (b << col);  // 清空該位，填充該位
+void barr_set(BoolArr* barr, size_t i, bool b) {
+    size_t row = i / 8;
+    setbit(barr->_arr + row, i, i + 1, b);
 }
 
-void barr_fill(byte* barr, int start, int end, bool b) {
-    if (start / 8 == end / 8) {
-        for (int i = start; i < end; i++) {
-            barr_set(barr, i, b);
-        }
+void barr_free(BoolArr* barr) {
+    free(barr->_arr);
+    free(barr);
+}
+
+void barr_fill(BoolArr* barr, size_t start, size_t end, bool b) {
+    size_t start_row = start / 8;
+    size_t end_row = end / 8;
+
+    if (start_row == end_row) {
+        setbit(barr->_arr + start_row, start, end, b);
     } else {
-        int a_end = (start + 7) / 8 * 8;
-        for (int i = start; i < a_end; i++)
-            barr_set(barr, i, b);
+        size_t l_row = ROWS(start);
+        size_t l = l_row * 8;
+        setbit(barr->_arr + start_row, start, l, b);
 
-        int b_start = end / 8 * 8;
-        for (int i = b_start; i < end; i++)
-            barr_set(barr, i, b);
+        size_t r_row = end_row;
+        size_t r = r_row * 8;
+        setbit(barr->_arr + r_row, r, end, b);
 
-        memset(barr + (start != a_end), b, (b_start - a_end) / 8);
+        memset(barr->_arr + l_row, 0xFF, r_row - l_row);
     }
 }
 
-void barr_str(const byte* barr, int len, char* dest) {
-    for (int i = 0; i < len; i++)
-        dest[i] = barr_get(barr, i) ? '1' : '0';
-    dest[len] = '\0';
+void barr_str(const BoolArr* barr, char* dest) {
+    for (size_t i = 0; i < barr->len; i++)
+        dest[i] = BITSTR(barr_get(barr, i));
+    dest[barr->len] = '\0';
 }
 
-void barr_print(const byte* barr, int len) {
-    char* buffer = malloc(len + 1);
-    barr_str(barr, len, buffer);
-    printf("%s\n", buffer);
+void barr_print(const BoolArr* barr) {
+    char* buffer = malloc(barr->len + 1);
+    barr_str(barr, buffer);
+    puts(buffer);
     free(buffer);
 }
 
-bool barr_all(const byte* barr, int len) {
-    for (int i = 0; i < len; i++)
+bool barr_all(const BoolArr* barr) {
+    for (size_t i = 0; i < barr->len; i++)
         if (!barr_get(barr, i))
             return false;
     return true;
 }
 
-bool barr_any(const byte* barr, int len) {
-    for (int i = 0; i < len; i++)
+bool barr_any(const BoolArr* barr) {
+    for (size_t i = 0; i < barr->len; i++)
         if (barr_get(barr, i))
             return true;
     return false;
