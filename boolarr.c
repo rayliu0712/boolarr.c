@@ -98,8 +98,15 @@ void barr_not(BoolArr* barr) {
 
 void barr_dump(const BoolArr* barr) {
     size_t rows = ROWUP(barr->len);
-    for (size_t i = 0; i < rows; i++)
-        printf("%08b\n", barr->_arr[i]);
+    for (size_t i = 0; i < rows; i++) {
+        //
+        u8 x = barr->_arr[i];
+        for (int j = 0; j < 8; j++) {
+            putchar('0' + ((x & 0x80) >> 7));
+            x <<= 1;
+        }
+        puts("");
+    }
 }
 
 bool barr_all(const BoolArr* barr) {

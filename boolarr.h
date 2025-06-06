@@ -2,7 +2,6 @@
 #include <stddef.h>
 
 #define BOOLSTR(b) ((b) ? "true" : "false")
-#define BITSTR(b) ('0' + (b))
 
 typedef unsigned char u8;
 
