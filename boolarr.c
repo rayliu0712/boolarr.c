@@ -51,7 +51,7 @@ void barr_copy(BoolArr* dest, const BoolArr* src) {
 
 BoolArr* barr_clone(const BoolArr* barr) {
     BoolArr* dest = barr_new(barr->len, false);
-    barr_copy(dest, barr);
+    barr_xcopy(dest, barr, 0, 0, barr->len);
     return dest;
 }
 
@@ -71,7 +71,7 @@ void barr_free(BoolArr* barr) {
 }
 
 void barr_fill(BoolArr* barr, size_t start, size_t end, bool b) {
-    assert(end < barr->len && start <= end);
+    assert(end <= barr->len && start <= end);
 
     size_t start_row = ROWDOWN(start);
     size_t end_row = ROWDOWN(end);
